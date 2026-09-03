@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gestor de Proyectos{% endblock %}</title>
+    
+    <!-- Fuentes: Plus Jakarta Sans (Títulos) + Inter (Cuerpo) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6, .font-display { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        .animate-fade-in-delay { 
+            opacity: 0; 
+            animation: fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.15s forwards; 
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-100 via-gray-50 to-gray-200 min-h-screen text-slate-700 antialiased selection:bg-indigo-100 selection:text-indigo-700">
+
+    <!-- Navbar -->
+    <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200/60 shadow-sm shadow-gray-900/5">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+            <a href="{% url 'lista_proyectos' %}" class="flex items-center gap-3 group">
+                <div class="p-2.5 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 group-hover:scale-105 transition-all duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                </div>
+                <span class="text-xl font-bold font-display tracking-tight text-slate-800 group-hover:text-indigo-700 transition-colors duration-300">
+                    Gestor de <span class="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Proyectos</span>
+                </span>
+            </a>
+            
+            <a href="{% url 'proyecto_crear' %}"
+               class="flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-500/25 hover:bg-indigo-700 hover:shadow-xl hover:shadow-indigo-500/30 hover:-translate-y-0.5 active:translate-y-0 active:shadow-md transition-all duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                Nuevo proyecto
+            </a>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 py-10 animate-fade-in">
+        
+        {% if messages %}
+            <div class="mb-8 space-y-3 animate-fade-in-delay">
+                {% for message in messages %}
+                <div class="flex items-start gap-3 px-4 py-3.5 rounded-r-xl rounded-l-sm text-sm font-medium shadow-sm border border-l-4 transition-all duration-300 hover:shadow-md
+                    {% if message.tags == 'success' %}
+                        bg-emerald-50/90 border-emerald-200/60 border-l-emerald-500 text-emerald-800
+                    {% elif message.tags == 'error' %}
+                        bg-rose-50/90 border-rose-200/60 border-l-rose-500 text-rose-800
+                    {% else %}
+                        bg-indigo-50/90 border-indigo-200/60 border-l-indigo-500 text-indigo-800
+                    {% endif %}">
+                    {% if message.tags == 'success' %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    {% elif message.tags == 'error' %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-rose-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    {% else %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    {% endif %}
+                    <span class="leading-relaxed">{{ message }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="animate-fade-in-delay bg-white/90 backdrop-blur-md rounded-2xl border border-gray-200/60 shadow-xl shadow-gray-900/5 p-6 sm:p-8">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</body>
+</html>
