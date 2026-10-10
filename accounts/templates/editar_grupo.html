@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Grupo | Gestor de Proyectos{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center gap-3">
+        <a href="{% url 'grupos' %}" class="text-sm text-slate-500 hover:text-brand-600 transition">← Volver a grupos</a>
+    </div>
+
+    <div>
+        <p class="text-sm font-medium text-brand-600">Administración</p>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Editar grupo</h1>
+        <p class="mt-1 text-sm text-slate-500">Modifica el nombre y administra los miembros del grupo.</p>
+    </div>
+
+    <!-- Nombre del grupo -->
+    <form method="post" class="bg-slate-50 border border-slate-200 rounded-lg p-5 space-y-4">
+        {% csrf_token %}
+        <div>
+            <label for="name" class="block text-sm font-semibold text-slate-700">Nombre del grupo</label>
+            <input id="name" name="name" type="text" required maxlength="150" value="{{ grupo.name }}"
+                   class="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-800 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none">
+        </div>
+        <button type="submit"
+                class="inline-flex items-center justify-center rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600">
+            Guardar nombre
+        </button>
+    </form>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Miembros actuales -->
+        <div class="rounded-lg border border-slate-200 overflow-hidden">
+            <div class="border-b border-slate-200 px-4 py-3 bg-slate-50">
+                <h2 class="font-semibold text-slate-900 text-sm">Miembros ({{ miembros|length }})</h2>
+            </div>
+            {% if miembros %}
+            <ul class="divide-y divide-slate-100 max-h-72 overflow-y-auto">
+                {% for usuario in miembros %}
+                <li class="flex items-center justify-between gap-3 px-4 py-3">
+                    <div>
+                        <p class="text-sm font-medium text-slate-800">{{ usuario.username }}</p>
+                        {% if usuario.get_full_name %}
+                        <p class="text-xs text-slate-500">{{ usuario.get_full_name }}</p>
+                        {% endif %}
+                    </div>
+                    <form method="post" action="{% url 'eliminar_usuario_grupo' grupo.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="id_user" value="{{ usuario.id }}">
+                        <button type="submit"
+                                class="text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition"
+                                title="Quitar del grupo">
+                            Quitar
+                        </button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="px-4 py-6 text-center text-sm text-slate-500">Este grupo no tiene miembros.</p>
+            {% endif %}
+        </div>
+
+        <!-- Usuarios disponibles -->
+        <div class="rounded-lg border border-slate-200 overflow-hidden">
+            <div class="border-b border-slate-200 px-4 py-3 bg-slate-50">
+                <h2 class="font-semibold text-slate-900 text-sm">Disponibles ({{ no_miembros|length }})</h2>
+            </div>
+            {% if no_miembros %}
+            <ul class="divide-y divide-slate-100 max-h-72 overflow-y-auto">
+                {% for usuario in no_miembros %}
+                <li class="flex items-center justify-between gap-3 px-4 py-3">
+                    <div>
+                        <p class="text-sm font-medium text-slate-800">{{ usuario.username }}</p>
+                        {% if usuario.get_full_name %}
+                        <p class="text-xs text-slate-500">{{ usuario.get_full_name }}</p>
+                        {% endif %}
+                    </div>
+                    <form method="post" action="{% url 'agregar_usuario_grupo' grupo.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="id_user" value="{{ usuario.id }}">
+                        <button type="submit"
+                                class="text-xs font-medium text-brand-600 hover:text-brand-700 hover:bg-brand-50 px-2 py-1 rounded transition"
+                                title="Agregar al grupo">
+                            Agregar
+                        </button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="px-4 py-6 text-center text-sm text-slate-500">Todos los usuarios ya son miembros.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

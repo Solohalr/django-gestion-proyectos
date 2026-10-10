@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Inicio · Gestor de Proyectos{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-2xl font-semibold text-slate-900 tracking-tight">
+        Bienvenido{% if user.first_name %}, {{ user.first_name }}{% endif %}
+    </h1>
+    <p class="mt-1 text-sm text-slate-500">
+        Resumen de tu actividad y acceso rápido a los proyectos.
+    </p>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+    <div class="border border-slate-200 rounded-lg p-5 bg-slate-50">
+        <p class="text-2xl font-semibold text-slate-900">{{ total_proyectos }}</p>
+        <p class="text-sm text-slate-500 mt-0.5">Proyectos</p>
+    </div>
+    <div class="border border-slate-200 rounded-lg p-5 bg-slate-50">
+        <p class="text-2xl font-semibold text-slate-900">{{ total_tareas }}</p>
+        <p class="text-sm text-slate-500 mt-0.5">Tareas totales</p>
+    </div>
+    <div class="border border-slate-200 rounded-lg p-5 bg-slate-50">
+        <p class="text-2xl font-semibold text-emerald-700">{{ tareas_completadas }}</p>
+        <p class="text-sm text-slate-500 mt-0.5">Completadas</p>
+    </div>
+</div>
+
+<div class="flex flex-col sm:flex-row gap-3">
+    <a href="{% url 'lista_proyectos' %}"
+       class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-brand-700 hover:bg-brand-800 rounded-md transition">
+        Ver proyectos
+    </a>
+    <a href="{% url 'proyecto_crear' %}"
+       class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-md transition">
+        Nuevo proyecto
+    </a>
+</div>
+{% endblock %}

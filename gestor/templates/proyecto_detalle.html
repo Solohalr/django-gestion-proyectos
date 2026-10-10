@@ -1,104 +1,100 @@
 {% extends "base.html" %}
-
 {% block title %}{{ proyecto.nombre }} · Gestor{% endblock %}
 
 {% block content %}
-<div class="mb-6">
-    <a href="{% url 'lista_proyectos' %}" class="text-sm text-gray-500 hover:text-gray-800 transition">
-        ← Volver al listado
+<header class="mb-6 pb-6 border-b border-slate-200">
+    <div class="flex flex-col sm:flex-row sm:items-start gap-4">
+        {% if proyecto.imagen %}
+        <img src="{{ proyecto.imagen.url }}" alt="{{ proyecto.nombre }}"
+             class="h-16 w-16 object-cover rounded-lg border border-slate-200 flex-shrink-0">
+        {% endif %}
+        <div class="min-w-0 flex-1">
+            <h1 class="text-2xl font-semibold text-slate-900 tracking-tight">{{ proyecto.nombre }}</h1>
+            <p class="mt-1 text-sm text-slate-500">{{ proyecto.descripcion|default:"Sin descripción" }}</p>
+            <div class="mt-3 flex flex-wrap gap-3 text-xs text-slate-500">
+                <span>{{ proyecto.duracion }} días</span>
+                <span>·</span>
+                <span>{{ proyecto.total_tareas }} tarea{{ proyecto.total_tareas|pluralize }}</span>
+                <span>·</span>
+                <span class="text-emerald-700">{{ proyecto.tareas_completadas }} completada{{ proyecto.tareas_completadas|pluralize }}</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="flex flex-wrap gap-2 mb-6">
+    <a href="{% url 'tarea_crear' proyecto.pk %}"
+       class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-brand-700 hover:bg-brand-800 rounded-md transition">
+        + Nueva tarea
+    </a>
+    <a href="{% url 'proyecto_editar' proyecto.pk %}"
+       class="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-700 border border-slate-300 hover:bg-slate-50 rounded-md transition">
+        Editar
+    </a>
+    <a href="{% url 'proyecto_eliminar' proyecto.pk %}"
+       class="inline-flex items-center px-4 py-2 text-sm font-medium text-red-700 border border-red-200 bg-red-50 hover:bg-red-100 rounded-md transition">
+        Eliminar
+    </a>
+    <a href="{% url 'lista_proyectos' %}"
+       class="inline-flex items-center px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 transition">
+        ← Volver
     </a>
 </div>
 
-<!-- Info del proyecto -->
-<article class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-8">
-    <header class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
-        <div>
-            <h1 class="text-2xl font-semibold text-gray-900">{{ proyecto.nombre }}</h1>
-            <p class="mt-1 text-sm text-gray-500">
-                Duración: <span class="font-medium text-gray-700">{{ proyecto.duracion }} días</span>
-                · {{ proyecto.total_tareas }} tarea{{ proyecto.total_tareas|pluralize }}
-            </p>
-        </div>
-        <div class="flex gap-2">
-            <a href="{% url 'tarea_crear' proyecto.pk %}"
-               class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md bg-gray-900 text-white hover:bg-gray-800 transition">
-                + Agregar Tarea
-            </a>
-            <a href="{% url 'proyecto_eliminar' proyecto.pk %}"
-               class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border border-red-200 text-red-600 hover:bg-red-50 transition">
-                Eliminar
-            </a>
-        </div>
-    </header>
-    <section>
-        <h2 class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Descripción</h2>
-        <p class="text-gray-700 leading-relaxed">
-            {{ proyecto.descripcion|default:"Sin descripción" }}
-        </p>
-    </section>
-</article>
-
-<!-- Listado de tareas -->
 <section>
-    <h2 class="text-lg font-medium text-gray-900 mb-4">
-        Tareas
-    </h2>
+    <h2 class="text-sm font-semibold text-slate-700 uppercase tracking-wide mb-3">Tareas</h2>
 
     {% if tareas %}
-        <ul class="space-y-3">
-            {% for tarea in tareas %}
-            <li class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm
-                       {% if tarea.esta_completada %}opacity-75{% endif %}">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div class="min-w-0 flex-1">
-                        <p class="font-medium text-gray-900
-                                  {% if tarea.esta_completada %}line-through text-gray-500{% endif %}">
-                            {{ tarea.titulo }}
-                        </p>
-                        <div class="mt-1 flex flex-wrap gap-2">
-                            <!-- Prioridad -->
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                                {% if tarea.prioridad == 'ALTA' %}bg-red-50 text-red-700
-                                {% elif tarea.prioridad == 'MEDIA' %}bg-yellow-50 text-yellow-700
-                                {% else %}bg-gray-100 text-gray-600{% endif %}">
-                                {{ tarea.get_prioridad_display }}
-                            </span>
-                            <!-- Estado -->
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                                {% if tarea.estado == 'COMPLETADA' %}bg-green-50 text-green-700
-                                {% elif tarea.estado == 'EN_PROGRESO' %}bg-blue-50 text-blue-700
-                                {% else %}bg-gray-100 text-gray-600{% endif %}">
-                                {{ tarea.get_estado_display }}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 flex-shrink-0">
-                        {% if not tarea.esta_completada %}
-                        <form method="post" action="{% url 'tarea_completar' tarea.pk %}">
-                            {% csrf_token %}
-                            <button type="submit"
-                                    class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-green-200 text-green-700 hover:bg-green-50 transition">
-                                Marcar como Completada
-                            </button>
-                        </form>
-                        {% endif %}
-                        <a href="{% url 'tarea_eliminar' tarea.pk %}"
-                           class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md border border-red-200 text-red-600 hover:bg-red-50 transition">
-                            Eliminar
-                        </a>
-                    </div>
+    <ul class="divide-y divide-slate-200 border border-slate-200 rounded-lg overflow-hidden">
+        {% for tarea in tareas %}
+        <li class="p-4 bg-white flex flex-col sm:flex-row sm:items-center gap-3">
+            <div class="min-w-0 flex-1">
+                <p class="text-sm font-medium text-slate-900 {% if tarea.esta_completada %}line-through text-slate-400{% endif %}">
+                    {{ tarea.titulo }}
+                </p>
+                {% if tarea.descripcion %}
+                <p class="text-xs text-slate-500 mt-0.5">{{ tarea.descripcion }}</p>
+                {% endif %}
+                <div class="mt-2 flex flex-wrap gap-2">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border
+                        {% if tarea.prioridad == 'ALTA' %}bg-red-50 text-red-700 border-red-200
+                        {% elif tarea.prioridad == 'MEDIA' %}bg-amber-50 text-amber-700 border-amber-200
+                        {% else %}bg-slate-50 text-slate-600 border-slate-200{% endif %}">
+                        {{ tarea.get_prioridad_display }}
+                    </span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border
+                        {% if tarea.estado == 'COMPLETADA' %}bg-emerald-50 text-emerald-700 border-emerald-200
+                        {% elif tarea.estado == 'EN_PROGRESO' %}bg-sky-50 text-sky-700 border-sky-200
+                        {% else %}bg-slate-50 text-slate-600 border-slate-200{% endif %}">
+                        {{ tarea.get_estado_display }}
+                    </span>
                 </div>
-            </li>
-            {% endfor %}
-        </ul>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                {% if not tarea.esta_completada %}
+                <form method="post" action="{% url 'avanzar_estado_tarea' tarea.pk %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="px-3 py-1.5 text-xs font-medium text-brand-700 border border-brand-200 bg-brand-50 hover:bg-brand-100 rounded-md transition">
+                        {% if tarea.estado == 'PENDIENTE' %}Iniciar{% else %}Completar{% endif %}
+                    </button>
+                </form>
+                {% endif %}
+                <a href="{% url 'tarea_eliminar' tarea.pk %}"
+                   class="px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-md transition">
+                    Eliminar
+                </a>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
     {% else %}
-        <div class="bg-white border border-gray-200 rounded-lg py-10 px-6 text-center">
-            <p class="text-gray-500 text-sm mb-3">Este proyecto aún no tiene tareas.</p>
-            <a href="{% url 'tarea_crear' proyecto.pk %}"
-               class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-gray-900 text-white hover:bg-gray-800 transition">
-                Agregar la primera
-            </a>
-        </div>
+    <div class="text-center py-10 border border-dashed border-slate-300 rounded-lg bg-slate-50">
+        <p class="text-sm text-slate-500">Este proyecto no tiene tareas.</p>
+        <a href="{% url 'tarea_crear' proyecto.pk %}" class="mt-2 inline-block text-sm font-medium text-brand-600 hover:text-brand-700">
+            Crear la primera →
+        </a>
+    </div>
     {% endif %}
 </section>
 {% endblock %}

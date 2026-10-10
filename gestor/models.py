@@ -5,6 +5,11 @@ class Proyecto(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, default='')
     duracion = models.PositiveIntegerField(help_text='Duración en días')
+    imagen = models.ImageField(
+        upload_to='proyectos/',
+        default='proyectos/logo.png',
+        blank=True,
+    )
 
     class Meta:
         ordering = ['-id']
@@ -17,6 +22,10 @@ class Proyecto(models.Model):
     @property
     def total_tareas(self):
         return self.tareas.count()
+
+    @property
+    def tareas_completadas(self):
+        return self.tareas.filter(estado='COMPLETADA').count()
 
 
 class Tarea(models.Model):
@@ -37,6 +46,7 @@ class Tarea(models.Model):
         related_name='tareas'
     )
     titulo = models.CharField(max_length=200)
+    descripcion = models.TextField(blank=True, default='')
     prioridad = models.CharField(
         max_length=10,
         choices=PRIORIDAD_CHOICES,

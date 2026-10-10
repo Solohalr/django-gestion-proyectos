@@ -1,39 +1,27 @@
 {% extends "base.html" %}
-
 {% block title %}Eliminar proyecto · Gestor{% endblock %}
 
 {% block content %}
-<div class="mb-6">
-    <a href="{% url 'proyecto_detalle' proyecto.pk %}" class="text-sm text-gray-500 hover:text-gray-800 transition">
-        ← Volver
+<header class="mb-6">
+    <h1 class="text-2xl font-semibold text-slate-900 tracking-tight">Eliminar proyecto</h1>
+    <p class="mt-1 text-sm text-slate-500">
+        Esta acción no se puede deshacer. También se eliminarán todas las tareas asociadas.
+    </p>
+</header>
+
+<div class="mb-6 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+    ¿Confirmas eliminar el proyecto <strong>{{ proyecto.nombre }}</strong>?
+</div>
+
+<form method="post" class="flex flex-col sm:flex-row gap-3">
+    {% csrf_token %}
+    <a href="{% url 'proyecto_detalle' proyecto.pk %}"
+       class="order-2 sm:order-1 sm:flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition">
+        Cancelar
     </a>
-</div>
-
-<div class="max-w-lg">
-    <div class="bg-white border border-red-200 rounded-lg p-6 sm:p-8 shadow-sm">
-        <h1 class="text-xl font-semibold text-gray-900 mb-2">¿Eliminar proyecto?</h1>
-        <p class="text-sm text-gray-600 mb-4">
-            Estás a punto de eliminar el proyecto
-            <strong class="text-gray-900">«{{ proyecto.nombre }}»</strong>.
-        </p>
-        <p class="text-sm text-red-600 mb-6">
-            Esta acción eliminará también las
-            <strong>{{ proyecto.total_tareas }}</strong>
-            tarea{{ proyecto.total_tareas|pluralize }} asociadas (eliminación en cascada).
-            No se puede deshacer.
-        </p>
-
-        <form method="post" class="flex gap-3">
-            {% csrf_token %}
-            <button type="submit"
-                    class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-red-600 text-white hover:bg-red-700 transition">
-                Sí, eliminar
-            </button>
-            <a href="{% url 'proyecto_detalle' proyecto.pk %}"
-               class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition">
-                Cancelar
-            </a>
-        </form>
-    </div>
-</div>
+    <button type="submit"
+            class="order-1 sm:order-2 sm:flex-[2] inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition">
+        Sí, eliminar
+    </button>
+</form>
 {% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Permisos | Gestor de Proyectos{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div>
+        <p class="text-sm font-medium text-brand-600">Administración</p>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Permisos por grupo</h1>
+        <p class="mt-1 text-sm text-slate-500">Asigna permisos de la aplicación a cada grupo de usuarios.</p>
+    </div>
+
+    {% if not grupos %}
+    <div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        No hay grupos creados. <a href="{% url 'grupos' %}" class="font-medium underline">Crea un grupo primero</a>.
+    </div>
+    {% else %}
+
+    <!-- Selector de grupo -->
+    <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <label for="grupo_select" class="text-sm font-semibold text-slate-700">Grupo:</label>
+        <select id="grupo_select"
+                onchange="window.location.href='?grupo=' + this.value;"
+                class="rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-800 shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none">
+            {% for g in grupos %}
+            <option value="{{ g.id }}" {% if grupo and g.id == grupo.id %}selected{% endif %}>{{ g.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    {% if grupo %}
+    <form method="post" action="{% url 'permisos' %}">
+        {% csrf_token %}
+        <input type="hidden" name="grupo" value="{{ grupo.id }}">
+
+        <div class="rounded-lg border border-slate-200 overflow-hidden">
+            <div class="border-b border-slate-200 px-5 py-3 bg-slate-50 flex items-center justify-between gap-3 flex-wrap">
+                <h2 class="font-semibold text-slate-900 text-sm">
+                    Permisos de «{{ grupo.name }}»
+                </h2>
+                <button type="submit"
+                        class="inline-flex items-center justify-center rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600">
+                    Guardar permisos
+                </button>
+            </div>
+
+            <!-- Agrupar por app: primero gestor, luego el resto -->
+            {% regroup permisos by app as permisos_por_app %}
+
+            <div class="p-5 space-y-6 max-h-[32rem] overflow-y-auto">
+                {% for grupo_app in permisos_por_app %}
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 pb-1 border-b border-slate-100">
+                        {% if grupo_app.grouper == 'gestor' %}Gestión de proyectos
+                        {% elif grupo_app.grouper == 'auth' %}Usuarios y grupos
+                        {% elif grupo_app.grouper == 'admin' %}Administración
+                        {% elif grupo_app.grouper == 'sessions' %}Sesiones
+                        {% else %}{{ grupo_app.grouper }}{% endif %}
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-1">
+                        {% for permiso in grupo_app.list %}
+                        <label class="flex items-start gap-2.5 px-3 py-2.5 rounded-md hover:bg-slate-50 cursor-pointer transition">
+                            <input type="checkbox" name="permisos" value="{{ permiso.id }}"
+                                   {% if permiso.id in permisos_grupo %}checked{% endif %}
+                                   class="mt-1 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                            <span class="text-sm leading-snug">
+                                <span class="font-medium text-slate-800">{{ permiso.titulo }}</span>
+                                <span class="block text-xs text-slate-500 mt-0.5">{{ permiso.descripcion }}</span>
+                                <span class="block text-[10px] text-slate-400 mt-0.5 font-mono">{{ permiso.codename }}</span>
+                            </span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-sm text-slate-500">No hay permisos registrados.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </form>
+    {% endif %}
+
+    {% endif %}
+</div>
+{% endblock %}

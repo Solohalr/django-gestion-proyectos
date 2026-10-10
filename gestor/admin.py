@@ -9,7 +9,7 @@ class TareaInline(admin.TabularInline):
 
 @admin.register(Proyecto)
 class ProyectoAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'duracion', 'total_tareas')
+    list_display = ('nombre', 'duracion', 'total_tareas', 'imagen')
     search_fields = ('nombre',)
     inlines = [TareaInline]
 
