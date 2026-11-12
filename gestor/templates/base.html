@@ -54,11 +54,23 @@
                    class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-md transition">
                     Inicio
                 </a>
+                {% if perms.gestor.view_proyecto %}
                 <a href="{% url 'lista_proyectos' %}"
                    class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-md transition">
                     Proyectos
                 </a>
+                {% endif %}
+                {% if perms.diagnostico.usar_ia %}
+                <a href="{% url 'diagnostico' %}"
+                   class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-md transition">
+                    Diagnóstico IA
+                </a>
+                {% endif %}
                 {% if user.is_staff %}
+                <a href="{% url 'doctores' %}"
+                   class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-md transition">
+                    Doctores
+                </a>
                 <a href="{% url 'grupos' %}"
                    class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-brand-600 hover:bg-slate-100 rounded-md transition">
                     Grupos

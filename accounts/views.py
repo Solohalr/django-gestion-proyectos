@@ -4,6 +4,10 @@ from django.contrib.auth import login
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+
+from .roles import obtener_grupo_doctor, obtener_grupo_usuario
 
 
 def es_admin(user):
@@ -44,6 +48,8 @@ def registro(request):
                 first_name=first_name,
                 last_name=last_name,
             )
+            # Cuenta pública = rol "Usuario": sin permisos hasta que un admin los asigne.
+            user.groups.add(obtener_grupo_usuario())
             login(request, user)
             messages.success(request, f'Bienvenido, {username}.')
             return redirect('home')
@@ -129,6 +135,93 @@ def eliminar_usuario_grupo(request, id_grupo):
     return redirect('editar_grupo', id_grupo=grupo.id)
 
 
+# ─── DOCTORES (solo admin) ───────────────────────────────────
+
+def _contexto_doctores(extra=None):
+    grupo = obtener_grupo_doctor()
+    doctores_qs = grupo.user_set.order_by('username')
+    candidatos = (
+        User.objects.filter(is_staff=False)
+        .exclude(id__in=doctores_qs.values_list('id', flat=True))
+        .order_by('username')
+    )
+    contexto = {'doctores': doctores_qs, 'candidatos': candidatos, 'errors': [], 'datos': {}}
+    contexto.update(extra or {})
+    return contexto
+
+
+@user_passes_test(es_admin)
+def doctores(request):
+    return render(request, 'doctores.html', _contexto_doctores())
+
+
+@user_passes_test(es_admin)
+def crear_doctor(request):
+    if request.method != 'POST':
+        return redirect('doctores')
+
+    username = request.POST.get('username', '').strip()
+    email = request.POST.get('email', '').strip()
+    first_name = request.POST.get('first_name', '').strip()
+    last_name = request.POST.get('last_name', '').strip()
+    password1 = request.POST.get('password1', '')
+    password2 = request.POST.get('password2', '')
+    errors = []
+
+    if not username:
+        errors.append('El nombre de usuario es obligatorio.')
+    elif User.objects.filter(username=username).exists():
+        errors.append('El nombre de usuario ya está en uso.')
+    if email and User.objects.filter(email=email).exists():
+        errors.append('El correo electrónico ya está en uso.')
+    if not password1:
+        errors.append('La contraseña es obligatoria.')
+    elif password1 != password2:
+        errors.append('Las contraseñas no coinciden.')
+    else:
+        try:
+            validate_password(password1, User(username=username, email=email,
+                                              first_name=first_name, last_name=last_name))
+        except ValidationError as exc:
+            errors.extend(exc.messages)
+
+    if errors:
+        return render(request, 'doctores.html', _contexto_doctores({
+            'errors': errors,
+            'datos': {'username': username, 'email': email,
+                      'first_name': first_name, 'last_name': last_name},
+        }))
+
+    user = User.objects.create_user(
+        username=username, email=email, password=password1,
+        first_name=first_name, last_name=last_name,
+    )
+    user.groups.add(obtener_grupo_doctor())
+    messages.success(request, f'Cuenta de doctor "{username}" creada.')
+    return redirect('doctores')
+
+
+@user_passes_test(es_admin)
+def agregar_doctor(request, id_usuario):
+    """Convierte a un usuario existente (no admin) en doctor."""
+    if request.method == 'POST':
+        user = get_object_or_404(User, id=id_usuario, is_staff=False)
+        user.groups.add(obtener_grupo_doctor())
+        messages.success(request, f'"{user.username}" ahora es doctor.')
+    return redirect('doctores')
+
+
+@user_passes_test(es_admin)
+def quitar_doctor(request, id_usuario):
+    """Quita el rol de doctor (la cuenta sigue existiendo como usuario)."""
+    if request.method == 'POST':
+        user = get_object_or_404(User, id=id_usuario)
+        user.groups.remove(obtener_grupo_doctor())
+        user.groups.add(obtener_grupo_usuario())
+        messages.success(request, f'"{user.username}" ya no es doctor.')
+    return redirect('doctores')
+
+
 # Traducciones y descripciones de permisos (español)
 PERMISOS_ES = {
     # Gestor de proyectos (los más importantes)
@@ -140,6 +233,8 @@ PERMISOS_ES = {
     'gestor.change_tarea': ('Editar / avanzar tareas', 'Permite cambiar el estado de una tarea (Pendiente → En progreso → Completada).'),
     'gestor.delete_tarea': ('Eliminar tareas', 'Permite borrar tareas de un proyecto.'),
     'gestor.view_tarea': ('Ver tareas', 'Permite ver las tareas dentro de un proyecto.'),
+    # Diagnóstico con IA
+    'diagnostico.usar_ia': ('Usar el diagnóstico con IA', 'Permite entrar a la página del modelo, elegir síntomas y ver los porcentajes por enfermedad.'),
     # Auth
     'auth.add_user': ('Crear usuarios', 'Permite crear nuevos usuarios del sistema.'),
     'auth.change_user': ('Editar usuarios', 'Permite modificar datos de usuarios.'),

@@ -1,2 +1,11 @@
 venv/
 .venv/
+env/
+__pycache__/
+*.pyc
+staticfiles/
+*.zip
+.env
+
+# Base de datos local (contiene usuarios y contraseñas cifradas): no se sube
+db.sqlite3

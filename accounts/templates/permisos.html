@@ -54,6 +54,7 @@
                         {% if grupo_app.grouper == 'gestor' %}Gestión de proyectos
                         {% elif grupo_app.grouper == 'auth' %}Usuarios y grupos
                         {% elif grupo_app.grouper == 'admin' %}Administración
+                        {% elif grupo_app.grouper == 'diagnostico' %}Diagnóstico con IA
                         {% elif grupo_app.grouper == 'sessions' %}Sesiones
                         {% else %}{{ grupo_app.grouper }}{% endif %}
                     </h3>

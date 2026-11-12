@@ -12,4 +12,8 @@ urlpatterns = [
     path('grupos/<int:id_grupo>/agregar-usuario/', views.agregar_usuario_grupo, name='agregar_usuario_grupo'),
     path('grupos/<int:id_grupo>/eliminar-usuario/', views.eliminar_usuario_grupo, name='eliminar_usuario_grupo'),
     path('permisos/', views.permisos, name='permisos'),
+    path('doctores/', views.doctores, name='doctores'),
+    path('doctores/crear/', views.crear_doctor, name='crear_doctor'),
+    path('doctores/<int:id_usuario>/agregar/', views.agregar_doctor, name='agregar_doctor'),
+    path('doctores/<int:id_usuario>/quitar/', views.quitar_doctor, name='quitar_doctor'),
 ]

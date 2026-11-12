@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}Diagnóstico con IA | Gestor de Proyectos{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div>
+        <p class="text-sm font-medium text-brand-600">Diagnóstico con IA</p>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Análisis de síntomas</h1>
+        <p class="mt-1 text-sm text-slate-500">
+            Marca todos los síntomas que presenta el paciente y pulsa «Analizar» para ver la probabilidad estimada de cada enfermedad.
+        </p>
+    </div>
+
+    {% if error %}
+    <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" id="form-sintomas" class="space-y-4">
+        {% csrf_token %}
+
+        <div class="rounded-lg border border-slate-200 overflow-hidden">
+            <div class="border-b border-slate-200 px-4 py-3 bg-slate-50 flex flex-col sm:flex-row sm:items-center gap-3">
+                <input id="buscador" type="search" autocomplete="off" placeholder="Buscar síntoma…"
+                       class="w-full sm:max-w-xs rounded-lg border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none">
+                <div class="sm:ml-auto flex items-center gap-3 text-sm">
+                    <span class="text-slate-600"><strong id="contador">0</strong> seleccionado<span id="plural">s</span></span>
+                    <button type="button" id="limpiar"
+                            class="text-xs font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 px-2 py-1 rounded transition">
+                        Limpiar todo
+                    </button>
+                </div>
+            </div>
+
+            <div id="chips" class="hidden flex-wrap gap-1.5 px-4 py-3 border-b border-slate-100 bg-white"></div>
+
+            <div class="p-3 max-h-96 overflow-y-auto">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0.5">
+                    {% for clave, nombre in sintomas %}
+                    <label class="sintoma flex items-center gap-2.5 px-3 py-2 rounded-md hover:bg-slate-50 cursor-pointer transition"
+                           data-nombre="{{ nombre|lower }}">
+                        <input type="checkbox" name="sintomas" value="{{ clave }}" data-nombre="{{ nombre }}"
+                               {% if clave in seleccionados %}checked{% endif %}
+                               class="rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+                        <span class="text-sm text-slate-700 leading-snug">{{ nombre }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+                <p id="sin-resultados" class="hidden py-6 text-center text-sm text-slate-500">Ningún síntoma coincide con la búsqueda.</p>
+            </div>
+        </div>
+
+        <button type="submit"
+                class="inline-flex items-center justify-center rounded-lg bg-brand-700 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600">
+            Analizar síntomas
+        </button>
+    </form>
+
+    <!-- Resultados -->
+    {% if resultados %}
+    <section id="resultados" class="rounded-lg border border-slate-200 overflow-hidden">
+        <div class="border-b border-slate-200 px-5 py-3 bg-slate-50 flex items-center justify-between gap-3 flex-wrap">
+            <h2 class="font-semibold text-slate-900 text-sm">Resultados del modelo</h2>
+            <span class="text-xs text-slate-500">{{ seleccionados|length }} síntoma{{ seleccionados|length|pluralize }} analizado{{ seleccionados|length|pluralize }}</span>
+        </div>
+        <ul class="divide-y divide-slate-100">
+            {% for r in resultados %}
+            <li class="px-5 py-3.5">
+                <div class="flex items-baseline justify-between gap-3">
+                    <span class="text-sm {% if forloop.first %}font-semibold text-slate-900{% else %}font-medium text-slate-700{% endif %}">
+                        {{ forloop.counter }}. {{ r.nombre }}
+                    </span>
+                    <span class="text-sm tabular-nums {% if forloop.first %}font-bold text-brand-600{% else %}font-medium text-slate-600{% endif %}">
+                        {{ r.porcentaje|floatformat:1 }}&nbsp;%
+                    </span>
+                </div>
+                <div class="mt-2 h-2 w-full rounded-full bg-slate-100 overflow-hidden"
+                     role="progressbar" aria-valuenow="{{ r.porcentaje|stringformat:'.1f' }}" aria-valuemin="0" aria-valuemax="100">
+                    <div class="h-full rounded-full {% if forloop.first %}bg-brand-500{% else %}bg-slate-400{% endif %}"
+                         style="width: {{ r.porcentaje|stringformat:'.1f' }}%"></div>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        <div class="border-t border-slate-200 bg-amber-50 px-5 py-3 text-xs text-amber-900 space-y-1">
+            {% if seleccionados|length < 3 %}
+            <p><strong>Pocos síntomas:</strong> con menos de 3 síntomas el resultado es poco fiable.</p>
+            {% endif %}
+            <p>Resultado orientativo de un modelo estadístico. No sustituye la evaluación ni el criterio clínico del médico.</p>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Historial -->
+    {% if recientes %}
+    <section class="rounded-lg border border-slate-200 overflow-hidden">
+        <div class="border-b border-slate-200 px-5 py-3 bg-slate-50">
+            <h2 class="font-semibold text-slate-900 text-sm">Mis consultas recientes</h2>
+        </div>
+        <ul class="divide-y divide-slate-100">
+            {% for c in recientes %}
+            <li class="px-5 py-3 text-sm">
+                <div class="flex items-baseline justify-between gap-3 flex-wrap">
+                    <span class="font-medium text-slate-800">
+                        {{ c.principal.nombre }} <span class="text-slate-500 font-normal">· {{ c.principal.porcentaje|floatformat:1 }}&nbsp;%</span>
+                    </span>
+                    <span class="text-xs text-slate-400">{{ c.creado|date:"d/m/Y H:i" }}</span>
+                </div>
+                <p class="mt-0.5 text-xs text-slate-500">{{ c.sintomas_es|join:", " }}</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
+</div>
+
+<script>
+(function () {
+    const checks = Array.from(document.querySelectorAll('input[name="sintomas"]'));
+    const filas = Array.from(document.querySelectorAll('.sintoma'));
+    const buscador = document.getElementById('buscador');
+    const contador = document.getElementById('contador');
+    const plural = document.getElementById('plural');
+    const chips = document.getElementById('chips');
+    const vacio = document.getElementById('sin-resultados');
+
+    const normalizar = t => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+    function actualizar() {
+        const marcados = checks.filter(c => c.checked);
+        contador.textContent = marcados.length;
+        plural.style.display = marcados.length === 1 ? 'none' : '';
+        chips.innerHTML = '';
+        marcados.forEach(c => {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'inline-flex items-center gap-1 rounded-full bg-brand-50 text-brand-700 border border-brand-100 px-2.5 py-1 text-xs font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition';
+            chip.textContent = c.dataset.nombre + ' ×';
+            chip.title = 'Quitar';
+            chip.addEventListener('click', () => { c.checked = false; actualizar(); });
+            chips.appendChild(chip);
+        });
+        chips.classList.toggle('hidden', marcados.length === 0);
+        chips.classList.toggle('flex', marcados.length > 0);
+    }
+
+    function filtrar() {
+        const q = normalizar(buscador.value.trim());
+        let visibles = 0;
+        filas.forEach(f => {
+            const ok = !q || normalizar(f.dataset.nombre).includes(q);
+            f.style.display = ok ? '' : 'none';
+            if (ok) visibles++;
+        });
+        vacio.classList.toggle('hidden', visibles > 0);
+    }
+
+    checks.forEach(c => c.addEventListener('change', actualizar));
+    buscador.addEventListener('input', filtrar);
+    buscador.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
+    document.getElementById('limpiar').addEventListener('click', () => {
+        checks.forEach(c => { c.checked = false; });
+        actualizar();
+    });
+
+    actualizar();
+
+    const res = document.getElementById('resultados');
+    if (res) res.scrollIntoView({ behavior: 'smooth', block: 'start' });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Doctores | Gestor de Proyectos{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <div>
+        <p class="text-sm font-medium text-brand-600">Administración</p>
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Doctores</h1>
+        <p class="mt-1 text-sm text-slate-500">
+            Solo un administrador puede crear doctores. Los doctores acceden a la página de diagnóstico con IA.
+        </p>
+    </div>
+
+    <!-- Crear doctor -->
+    <section class="bg-slate-50 border border-slate-200 rounded-lg p-5">
+        <h2 class="font-semibold text-slate-900 text-sm mb-4">Crear cuenta de doctor</h2>
+
+        {% if errors %}
+        <div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 space-y-1">
+            {% for error in errors %}<p class="text-sm text-red-700">{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" action="{% url 'crear_doctor' %}" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {% csrf_token %}
+            <div class="sm:col-span-2">
+                <label for="d_username" class="block text-sm font-semibold text-slate-700">Usuario *</label>
+                <input id="d_username" name="username" type="text" required value="{{ datos.username|default:'' }}"
+                       class="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none">
+            </div>
+            <div>
+                <label for="d_first" class="block text-sm font-semibold text-slate-700">Nombre</label>
+                <input id="d_first" name="first_name" type="text" value="{{ datos.first_name|default:'' }}"
+                       class="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none">
+            </div>
+            <div>
+                <label for="d_last" class="block text-sm font-semibold text-slate-700">Apellido</label>
+                <input id="d_last" name="last_name" type="text" value="{{ datos.last_name|default:'' }}"
+                       class="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none">
+            </div>
+            <div class="sm:col-span-2">
+                <label for="d_email" class="block text-sm font-semibold text-slate-700">Correo electrónico</label>
+                <input id="d_email" name="email" type="email" value="{{ datos.email|default:'' }}"
+                       class="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none">
+            </div>
+            <div>
+                <label for="d_p1" class="block text-sm font-semibold text-slate-700">Contraseña *</label>
+                <input id="d_p1" name="password1" type="password" required autocomplete="new-password"
+                       class="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none">
+            </div>
+            <div>
+                <label for="d_p2" class="block text-sm font-semibold text-slate-700">Confirmar contraseña *</label>
+                <input id="d_p2" name="password2" type="password" required autocomplete="new-password"
+                       class="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none">
+            </div>
+            <div class="sm:col-span-2">
+                <button type="submit"
+                        class="inline-flex items-center justify-center rounded-lg bg-brand-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600">
+                    Crear doctor
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Doctores actuales -->
+        <section class="rounded-lg border border-slate-200 overflow-hidden">
+            <div class="border-b border-slate-200 px-4 py-3 bg-slate-50">
+                <h2 class="font-semibold text-slate-900 text-sm">Doctores ({{ doctores|length }})</h2>
+            </div>
+            {% if doctores %}
+            <ul class="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                {% for d in doctores %}
+                <li class="flex items-center justify-between gap-3 px-4 py-3">
+                    <div>
+                        <p class="text-sm font-medium text-slate-800">{{ d.username }}</p>
+                        {% if d.get_full_name %}<p class="text-xs text-slate-500">{{ d.get_full_name }}</p>{% endif %}
+                    </div>
+                    <form method="post" action="{% url 'quitar_doctor' d.id %}">
+                        {% csrf_token %}
+                        <button type="submit"
+                                onclick="return confirm('¿Quitar el rol de doctor a {{ d.username|escapejs }}?');"
+                                class="text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded transition">
+                            Quitar rol
+                        </button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="px-4 py-6 text-center text-sm text-slate-500">Todavía no hay doctores.</p>
+            {% endif %}
+        </section>
+
+        <!-- Usuarios que pueden ser doctores -->
+        <section class="rounded-lg border border-slate-200 overflow-hidden">
+            <div class="border-b border-slate-200 px-4 py-3 bg-slate-50">
+                <h2 class="font-semibold text-slate-900 text-sm">Usuarios registrados ({{ candidatos|length }})</h2>
+            </div>
+            {% if candidatos %}
+            <ul class="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                {% for u in candidatos %}
+                <li class="flex items-center justify-between gap-3 px-4 py-3">
+                    <div>
+                        <p class="text-sm font-medium text-slate-800">{{ u.username }}</p>
+                        {% if u.get_full_name %}<p class="text-xs text-slate-500">{{ u.get_full_name }}</p>{% endif %}
+                    </div>
+                    <form method="post" action="{% url 'agregar_doctor' u.id %}">
+                        {% csrf_token %}
+                        <button type="submit"
+                                class="text-xs font-medium text-brand-600 hover:text-brand-700 hover:bg-brand-50 px-2 py-1 rounded transition">
+                            Hacer doctor
+                        </button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="px-4 py-6 text-center text-sm text-slate-500">No hay otros usuarios registrados.</p>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %}

@@ -7,10 +7,18 @@
         Bienvenido{% if user.first_name %}, {{ user.first_name }}{% endif %}
     </h1>
     <p class="mt-1 text-sm text-slate-500">
-        Resumen de tu actividad y acceso rápido a los proyectos.
+        {% if perms.gestor.view_proyecto %}Resumen de tu actividad y acceso rápido a los proyectos.{% else %}Estas son las herramientas disponibles para tu cuenta.{% endif %}
     </p>
 </div>
 
+{% if not perms.gestor.view_proyecto and not perms.diagnostico.usar_ia and not user.is_staff %}
+<div class="rounded-lg border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+    <p class="font-semibold">Acceso limitado</p>
+    <p class="mt-1">Tu cuenta todavía no tiene permisos asignados. Un administrador debe habilitarte el acceso a las herramientas del sistema.</p>
+</div>
+{% endif %}
+
+{% if perms.gestor.view_proyecto %}
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
     <div class="border border-slate-200 rounded-lg p-5 bg-slate-50">
         <p class="text-2xl font-semibold text-slate-900">{{ total_proyectos }}</p>
@@ -31,9 +39,29 @@
        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium text-white bg-brand-700 hover:bg-brand-800 rounded-md transition">
         Ver proyectos
     </a>
+    {% if perms.gestor.add_proyecto %}
     <a href="{% url 'proyecto_crear' %}"
        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-md transition">
         Nuevo proyecto
     </a>
+    {% endif %}
 </div>
+{% endif %}
+
+{% if perms.diagnostico.usar_ia or user.is_staff %}
+<div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+    {% if perms.diagnostico.usar_ia %}
+    <a href="{% url 'diagnostico' %}" class="block border border-slate-200 rounded-lg p-5 hover:border-brand-500 hover:bg-brand-50 transition">
+        <p class="font-semibold text-slate-900">Diagnóstico con IA</p>
+        <p class="text-sm text-slate-500 mt-1">Selecciona síntomas y consulta la probabilidad de cada enfermedad.</p>
+    </a>
+    {% endif %}
+    {% if user.is_staff %}
+    <a href="{% url 'doctores' %}" class="block border border-slate-200 rounded-lg p-5 hover:border-brand-500 hover:bg-brand-50 transition">
+        <p class="font-semibold text-slate-900">Doctores</p>
+        <p class="text-sm text-slate-500 mt-1">Crea cuentas de doctor o asigna ese rol a un usuario.</p>
+    </a>
+    {% endif %}
+</div>
+{% endif %}
 {% endblock %}

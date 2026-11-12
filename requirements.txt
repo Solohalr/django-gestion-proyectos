@@ -2,3 +2,8 @@ asgiref==3.12.1
 Django>=5.2,<6.0
 pillow>=10.0
 sqlparse==0.6.0
+
+# Diagnóstico con IA (los .pkl se guardaron con estas versiones)
+numpy>=2.0
+scikit-learn==1.7.2
+xgboost>=3.1

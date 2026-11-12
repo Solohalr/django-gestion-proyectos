@@ -17,6 +17,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'gestor',
     'accounts',
+    'diagnostico',  # debe ir después de django.contrib.auth
 ]
 
 MIDDLEWARE = [
